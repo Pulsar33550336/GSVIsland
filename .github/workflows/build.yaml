@@ -1,0 +1,81 @@
+name: build plugin
+
+on:
+  push:
+    branches: [ master ]
+    tags: [ '*' ]   # push tag 时触发
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '要构建的 tag（可选，手动触发旧 tag）'
+        required: false
+        default: ''
+
+env:
+  DOTNET_VERSION: '8.0'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    # Checkout 逻辑：手动输入 tag 优先，否则使用触发 ref
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.inputs.tag || github.ref }}
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Publish plugin (with cipx package)
+      run: dotnet publish -c Release -p:CreateCipx=true
+
+    - name: Upload cipx artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: GSVIsland-plugin
+        path: GSVIsland/cipx/GSVIsland.cipx
+        retention-days: 7
+
+    - name: Upload checksums
+      uses: actions/upload-artifact@v4
+      with:
+        name: GSVIsland-checksums
+        path: GSVIsland/cipx/checksums.md
+        retention-days: 7
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+
+    steps:
+    - name: Download cipx artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: GSVIsland-plugin
+        path: .
+
+    - name: Download checksums
+      uses: actions/download-artifact@v4
+      with:
+        name: GSVIsland-checksums
+        path: .
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+        draft: true
+        files: GSVIsland.cipx
+        body_path: checksums.md
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_PAT }}
