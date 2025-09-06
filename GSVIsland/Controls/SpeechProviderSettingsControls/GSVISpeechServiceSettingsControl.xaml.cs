@@ -1,11 +1,12 @@
-﻿using ClassIsland.Shared.Helpers;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using ClassIsland.Shared.Helpers;
+using GSVIsland.Models;
 using GSVIsland.Shared;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Windows;
-using System.Windows.Controls;
-using GSVIsland.Models;
 
 namespace GSVIsland.Controls.SpeechProviderSettingsControls;
 
@@ -15,29 +16,64 @@ namespace GSVIsland.Controls.SpeechProviderSettingsControls;
 public partial class GSVISpeechServiceSettingsControl : INotifyPropertyChanged
 {
     public GSVISpeechSettings Settings { get; set; } = new();
-
-    PasswordBox PasswordBox { get; set; } = new();
+    
+    // 在 Avalonia 中，我们使用标准的 TextBox 来处理密码
+    private TextBox _passwordTextBox = new();
 
     public GSVISpeechServiceSettingsControl()
     {
-        Settings = ConfigureFileHelper.LoadConfig<GSVISpeechSettings>(Path.Combine(GlobalConstants.PluginConfigFolder, "Settings.json"));
+        InitializeComponent();
+        
+        // 在 Avalonia 中，Loaded 事件的处理方式不同
+        this.AttachedToVisualTree += OnAttachedToVisualTree;
+        
+        LoadSettings();
+    }
+
+    private void OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
+    {
+        // 控件已附加到视觉树，可以初始化设置
+        LoadSettings();
+    }
+
+    private void LoadSettings()
+    {
+        Settings = ConfigureFileHelper.LoadConfig<GSVISpeechSettings>(
+            Path.Combine(GlobalConstants.PluginConfigFolder, "Settings.json"));
+        
         Settings.PropertyChanged += (sender, args) =>
         {
-            ConfigureFileHelper.SaveConfig<GSVISpeechSettings>(Path.Combine(GlobalConstants.PluginConfigFolder, "Settings.json"), Settings);
+            ConfigureFileHelper.SaveConfig<GSVISpeechSettings>(
+                Path.Combine(GlobalConstants.PluginConfigFolder, "Settings.json"), Settings);
         };
-        InitializeComponent();
+        
+        // 设置密码框的初始值（如果已经创建）
+        if (_passwordTextBox != null)
+        {
+            _passwordTextBox.Text = Settings.AccessToken;
+        }
+        
+        // 设置数据上下文
+        this.DataContext = this;
     }
 
-    void PasswordChangedHandler(Object sender, RoutedEventArgs args)
+    // 密码变更处理（在 XAML 中绑定到 TextBox 的 TextChanged 事件）
+    private void PasswordChangedHandler(object sender, TextChangedEventArgs args)
     {
-        Settings.AccessToken = PasswordBox.Password;
-
+        if (sender is TextBox textBox)
+        {
+            Settings.AccessToken = textBox.Text;
+        }
     }
 
-    void PasswordBox_Loaded(object sender, RoutedEventArgs args)
+    // 密码框加载处理（在 XAML 中绑定到 TextBox 的 AttachedToVisualTree 事件）
+    private void PasswordBox_Loaded(object sender, VisualTreeAttachmentEventArgs e)
     {
-        PasswordBox = sender as PasswordBox;
-        PasswordBox.Password = Settings.AccessToken;
+        if (sender is TextBox textBox)
+        {
+            _passwordTextBox = textBox;
+            textBox.Text = Settings.AccessToken;
+        }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

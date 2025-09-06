@@ -3,17 +3,17 @@
 	<PropertyGroup>
 		<TargetFramework>net8.0-windows</TargetFramework>
 		<Nullable>enable</Nullable>
-		<UseWPF>true</UseWPF>
+		<UseWPF>false</UseWPF>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<EnableDynamicLoading>True</EnableDynamicLoading>
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<ClassIslandPluginSdkVersion>1.6.0.5</ClassIslandPluginSdkVersion>
+		<ClassIslandPluginSdkVersion>1.7.105.0</ClassIslandPluginSdkVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="ClassIsland.PluginSdk" Version="1.7.0.1">
+		<PackageReference Include="ClassIsland.PluginSdk" Version="1.7.105-dev-v2">
 			<ExcludeAssets>runtime; native</ExcludeAssets>
 		</PackageReference>
 		<PackageReference Include="NAudio" Version="2.2.1" />
