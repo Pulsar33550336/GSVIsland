@@ -1,33 +1,32 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFramework>net8.0-windows</TargetFramework>
-		<Nullable>enable</Nullable>
-		<UseWPF>false</UseWPF>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<EnableDynamicLoading>True</EnableDynamicLoading>
-	</PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net8.0-windows</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <PlatformTarget>x64</PlatformTarget>
+        <EnableDynamicLoading>True</EnableDynamicLoading>
+    </PropertyGroup>
 
-	<PropertyGroup>
-		<ClassIslandPluginSdkVersion>1.7.105.0</ClassIslandPluginSdkVersion>
-	</PropertyGroup>
+    <PropertyGroup>
+        <ClassIslandPluginSdkVersion>1.6.3.*</ClassIslandPluginSdkVersion>
+    </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="ClassIsland.PluginSdk" Version="1.7.105-dev-v2">
-			<ExcludeAssets>runtime; native</ExcludeAssets>
-		</PackageReference>
-		<PackageReference Include="NAudio" Version="2.2.1" />
-	</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="ClassIsland.PluginSdk" Version="1.7.105-dev-v2">
+            <ExcludeAssets>runtime; native</ExcludeAssets>
+        </PackageReference>
+    </ItemGroup>
 
-	<ItemGroup>
-		<None Update="icon.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="manifest.yml">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="README.md">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
+    <ItemGroup>
+        <None Update="manifest.yml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="README.md">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="icon.png">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
 </Project>

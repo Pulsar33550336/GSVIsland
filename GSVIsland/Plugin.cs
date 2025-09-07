@@ -2,7 +2,6 @@
 using ClassIsland.Core;
 using ClassIsland.Core.Abstractions;
 using ClassIsland.Core.Attributes;
-using ClassIsland.Core.Controls.CommonDialog;
 using ClassIsland.Core.Extensions.Registry;
 using GSVIsland.Controls.SpeechProviderSettingsControls;
 using GSVIsland.Services.SpeechService;
@@ -10,6 +9,7 @@ using GSVIsland.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.IO;
+using SoundFlow.Abstracts;
 
 namespace GSVIsland
 {
