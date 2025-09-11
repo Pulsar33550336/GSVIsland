@@ -18,12 +18,12 @@
             materialDesign:HintAssist.Hint="服务器地址" />
 
         <!-- 访问令牌（先用文本框代替） -->
-        <PasswordBox
+        <TextBox
+            FontFamily="pack://application:,,,/GSVIsland;;;component/Font/#password, pack://application:,,,/ClassIsland;;;component/Assets/Fonts/#HarmonyOS Sans SC"
+            Text="{Binding Settings.AccessToken, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
             Margin="0 4 0 0"
-            Style="{StaticResource MaterialDesignFloatingHintPasswordBox}"
-            FontSize="10"
-            Loaded="PasswordBox_Loaded"
-            PasswordChanged="PasswordChangedHandler"
+            Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+            FontSize="14"
             materialDesign:HintAssist.Hint="访问令牌" />
 
         <!-- 模型名称 -->
