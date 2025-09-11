@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net8.0-windows</TargetFramework>
@@ -13,10 +13,20 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Remove="Font\password.ttf" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="ClassIsland.PluginSdk" Version="1.7.0.1">
 			<ExcludeAssets>runtime; native</ExcludeAssets>
 		</PackageReference>
 		<PackageReference Include="NAudio" Version="2.2.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Resource Include="Font\password.ttf">
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </Resource>
 	</ItemGroup>
 
 	<ItemGroup>
