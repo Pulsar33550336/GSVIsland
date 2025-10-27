@@ -4,8 +4,9 @@ using ClassIsland.Core.Attributes;
 using ClassIsland.Shared.Helpers;
 using GSVIsland.Shared;
 using Microsoft.Extensions.Logging;
-using NAudio.Wave;
-using NAudio.Wave.SampleProviders;
+using SoundFlow;
+using SoundFlow.Components;
+using SoundFlow.Providers;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -13,8 +14,10 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using ClassIsland.Core.Abstractions.Services;
 using GSVIsland.Models;
-
+using SoundFlow.Abstracts;
+using SoundFlow.Backends.MiniAudio;
 
 namespace GSVIsland.Services.SpeechService;
 
@@ -33,21 +36,26 @@ public class GSVIService : ISpeechService
 
     private CancellationTokenSource? requestingCancellationTokenSource;
 
-    private IWavePlayer? CurrentWavePlayer { get; set; }
+    private SoundPlayer? CurrentSoundPlayer { get; set; }
 
-    private HttpClient? _httpClient;
-    private HttpClient HttpClient => _httpClient ??= CreateHttpClient();
+    private AudioEngine audioEngine;
 
-    public GSVIService(ILogger<GSVIService> logger)
+    private IAudioService AudioService;
+    
+    public GSVIService(ILogger<GSVIService> logger,IAudioService audioService)
     {
+        audioEngine = audioService.AudioEngine;
+        AudioService = audioService;
         Logger = logger;
-        Settings = ConfigureFileHelper.LoadConfig<GSVISpeechSettings>(Path.Combine(GlobalConstants.PluginConfigFolder, "Settings.json"));
+        Settings = ConfigureFileHelper.LoadConfig<GSVISpeechSettings>(Path.Combine(GlobalConstants.PluginConfigFolder,
+            "Settings.json"));
         Logger.LogInformation("初始化了 GSVI 服务。");
     }
 
     public void ReloadConfig()
     {
-        Settings = ConfigureFileHelper.LoadConfig<GSVISpeechSettings>(Path.Combine(GlobalConstants.PluginConfigFolder, "Settings.json"));
+        Settings = ConfigureFileHelper.LoadConfig<GSVISpeechSettings>(Path.Combine(GlobalConstants.PluginConfigFolder,
+            "Settings.json"));
     }
 
     private HttpClient CreateHttpClient()
@@ -75,7 +83,8 @@ public class GSVIService : ISpeechService
 
     public void EnqueueSpeechQueue(string text)
     {
-        Settings = ConfigureFileHelper.LoadConfig<GSVISpeechSettings>(Path.Combine(GlobalConstants.PluginConfigFolder, "Settings.json"));
+        Settings = ConfigureFileHelper.LoadConfig<GSVISpeechSettings>(Path.Combine(GlobalConstants.PluginConfigFolder,
+            "Settings.json"));
         var settings = Settings;
         Logger.LogInformation("使用模型 {ModelName}，情感 {Emotion} 朗读文本：{Text}",
             settings.ModelName, settings.Emotion, text);
@@ -89,7 +98,9 @@ public class GSVIService : ISpeechService
         requestingCancellationTokenSource = new CancellationTokenSource();
         if (previousCts is { IsCancellationRequested: false })
         {
-            requestingCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(previousCts.Token, requestingCancellationTokenSource.Token);
+            requestingCancellationTokenSource =
+                CancellationTokenSource.CreateLinkedTokenSource(previousCts.Token,
+                    requestingCancellationTokenSource.Token);
         }
 
         var cache = GetCachePath(text, settings.Emotion);
@@ -113,14 +124,15 @@ public class GSVIService : ISpeechService
         requestingCancellationTokenSource?.Cancel();
         try
         {
-            CurrentWavePlayer?.Stop();
-            CurrentWavePlayer?.Dispose();
-            CurrentWavePlayer = null;
+            CurrentSoundPlayer?.Stop();
+            CurrentSoundPlayer?.Dispose();
+            CurrentSoundPlayer = null;
         }
         catch (Exception e)
         {
             // ignored
         }
+
         while (PlayingQueue.Count > 0)
         {
             var playInfo = PlayingQueue.Dequeue();
@@ -161,6 +173,8 @@ public class GSVIService : ISpeechService
 
         try
         {
+            using var httpClient = CreateHttpClient();
+
             // 设置认证头
             var request = new HttpRequestMessage(HttpMethod.Post, $"{serverUrl}/infer_single");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", settings.AccessToken);
@@ -173,7 +187,8 @@ public class GSVIService : ISpeechService
 
             Logger.LogDebug("发送 GSVI TTS 请求到：{RequestUri}", request.RequestUri);
 
-            using var response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            using var response =
+                await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {
@@ -183,10 +198,11 @@ public class GSVIService : ISpeechService
                 if (result?.Msg == "合成成功" && !string.IsNullOrEmpty(result.AudioUrl))
                 {
                     // 下载音频文件
-                    using var audioResponse = await HttpClient.GetAsync(result.AudioUrl, cancellationToken);
+                    using var audioResponse = await httpClient.GetAsync(result.AudioUrl, cancellationToken);
                     if (audioResponse.IsSuccessStatusCode)
                     {
-                        await using var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
+                        await using var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write,
+                            FileShare.None);
                         await audioResponse.Content.CopyToAsync(fs, cancellationToken);
                         Logger.LogDebug("语音生成并保存到：{FilePath}", filePath);
                         return true;
@@ -223,6 +239,9 @@ public class GSVIService : ISpeechService
             return;
         IsPlaying = true;
 
+        // 初始化 SoundFlow 音频引擎
+        // using var audioEngine = new MiniAudioEngine();
+
         while (PlayingQueue.Count > 0)
         {
             var playInfo = PlayingQueue.Dequeue();
@@ -238,6 +257,7 @@ public class GSVIService : ISpeechService
                     Logger.LogError("语音 {} 生成失败。", playInfo.FilePath);
                     continue;
                 }
+
                 Logger.LogDebug("语音生成完成。");
             }
 
@@ -247,33 +267,40 @@ public class GSVIService : ISpeechService
                 continue;
             }
 
-            CurrentWavePlayer?.Dispose();
-            var player = CurrentWavePlayer = new DirectSoundOut();
+            CurrentSoundPlayer?.Stop();
+            CurrentSoundPlayer?.Dispose();
+            using var device = AudioService.TryInitializeDefaultPlaybackDevice();
+            device?.Start();
             try
             {
-                await using var audio = new AudioFileReader(playInfo.FilePath);
-                var volume = new VolumeSampleProvider(audio)
-                {
-                    Volume = (float)ISpeechService.GlobalSettings.SpeechVolume
+                // 使用 SoundFlow 播放音频
+                Stream stream = File.OpenRead(playInfo.FilePath);
+                var provider = new StreamDataProvider(audioEngine, IAudioService.DefaultAudioFormat, stream);
+                var player = new SoundPlayer(audioEngine, IAudioService.DefaultAudioFormat, provider);
+                player.Volume = (float)ISpeechService.GlobalSettings.SpeechVolume;
 
-                };
-                player.Init(volume);
+                CurrentSoundPlayer = player;
+
+
                 Logger.LogDebug("开始播放 {FilePath}", playInfo.FilePath);
-                player.Play();
-                playInfo.IsPlayingCompleted = false;
+                device?.MasterMixer.AddComponent(player);
 
                 var playbackTcs = new TaskCompletionSource<bool>();
-                void PlaybackStoppedHandler(object? sender, StoppedEventArgs args)
+
+                void PlaybackStoppedHandler(object? sender, EventArgs args)
                 {
+                    //Mixer.Master.RemoveComponent(player);
                     playInfo.IsPlayingCompleted = true;
                     playbackTcs.SetResult(true);
                 }
 
-                player.PlaybackStopped += PlaybackStoppedHandler;
+                player.PlaybackEnded += PlaybackStoppedHandler;
+                player.Play();
+                playInfo.IsPlayingCompleted = false;
 
                 await playbackTcs.Task;
 
-                player.PlaybackStopped -= PlaybackStoppedHandler;
+                player.PlaybackEnded -= PlaybackStoppedHandler;
                 Logger.LogDebug("结束播放 {FilePath}", playInfo.FilePath);
             }
             catch (Exception ex)
@@ -282,8 +309,7 @@ public class GSVIService : ISpeechService
             }
         }
 
-        CurrentWavePlayer?.Dispose();
-        CurrentWavePlayer = null;
+        CurrentSoundPlayer = null;
         IsPlaying = false;
     }
 }

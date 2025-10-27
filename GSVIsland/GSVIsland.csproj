@@ -1,43 +1,32 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFramework>net8.0-windows</TargetFramework>
-		<Nullable>enable</Nullable>
-		<UseWPF>true</UseWPF>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<EnableDynamicLoading>True</EnableDynamicLoading>
-	</PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net8.0-windows</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <PlatformTarget>x64</PlatformTarget>
+        <EnableDynamicLoading>True</EnableDynamicLoading>
+    </PropertyGroup>
 
-	<PropertyGroup>
-		<ClassIslandPluginSdkVersion>1.6.0.5</ClassIslandPluginSdkVersion>
-	</PropertyGroup>
+    <PropertyGroup>
+        <ClassIslandPluginSdkVersion>1.6.3.*</ClassIslandPluginSdkVersion>
+    </PropertyGroup>
 
-	<ItemGroup>
-	  <None Remove="Font\password.ttf" />
-	</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="ClassIsland.PluginSdk" Version="1.7.106-dev-v2">
+            <ExcludeAssets>runtime; native</ExcludeAssets>
+        </PackageReference>
+    </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="ClassIsland.PluginSdk" Version="1.7.0.1">
-			<ExcludeAssets>runtime; native</ExcludeAssets>
-		</PackageReference>
-		<PackageReference Include="NAudio" Version="2.2.1" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Resource Include="Font\password.ttf">
-	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-	  </Resource>
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Update="icon.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="manifest.yml">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="README.md">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
+    <ItemGroup>
+        <None Update="manifest.yml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="README.md">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="icon.png">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
 </Project>
