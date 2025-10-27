@@ -2,9 +2,9 @@
   "profiles": {
     "ClassIsland 插件": {
       "commandName": "Executable",
-      "executablePath": "/home/gary/ClassIsland/ClassIsland.Desktop/bin/Debug/net8.0/ClassIsland.Desktop",
+      "executablePath": "/home/Pulsar/ClassIsland/ClassIsland.Desktop/bin/Debug/net8.0/ClassIsland.Desktop",
       "commandLineArgs": "-epp $(TargetDir)",
-      "workingDirectory": "/home/gary/ClassIsland/ClassIsland.Desktop/bin/Debug/net8.0/"
+      "workingDirectory": "/home/Pulsar/ClassIsland/ClassIsland.Desktop/bin/Debug/net8.0/"
     }
   }
 }

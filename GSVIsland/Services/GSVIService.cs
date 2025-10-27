@@ -40,9 +40,12 @@ public class GSVIService : ISpeechService
 
     private AudioEngine audioEngine;
 
-    public GSVIService(ILogger<GSVIService> logger,IAudioService  audioService)
+    private IAudioService AudioService;
+    
+    public GSVIService(ILogger<GSVIService> logger,IAudioService audioService)
     {
         audioEngine = audioService.AudioEngine;
+        AudioService = audioService;
         Logger = logger;
         Settings = ConfigureFileHelper.LoadConfig<GSVISpeechSettings>(Path.Combine(GlobalConstants.PluginConfigFolder,
             "Settings.json"));
@@ -122,6 +125,7 @@ public class GSVIService : ISpeechService
         try
         {
             CurrentSoundPlayer?.Stop();
+            CurrentSoundPlayer?.Dispose();
             CurrentSoundPlayer = null;
         }
         catch (Exception e)
@@ -264,26 +268,28 @@ public class GSVIService : ISpeechService
             }
 
             CurrentSoundPlayer?.Stop();
-
+            CurrentSoundPlayer?.Dispose();
+            using var device = AudioService.TryInitializeDefaultPlaybackDevice();
+            device?.Start();
             try
             {
                 // 使用 SoundFlow 播放音频
                 Stream stream = File.OpenRead(playInfo.FilePath);
-                var provider = new StreamDataProvider(stream);
-                var player = new SoundPlayer(provider);
+                var provider = new StreamDataProvider(audioEngine, IAudioService.DefaultAudioFormat, stream);
+                var player = new SoundPlayer(audioEngine, IAudioService.DefaultAudioFormat, provider);
                 player.Volume = (float)ISpeechService.GlobalSettings.SpeechVolume;
 
                 CurrentSoundPlayer = player;
 
 
                 Logger.LogDebug("开始播放 {FilePath}", playInfo.FilePath);
-                Mixer.Master.AddComponent(player);
+                device?.MasterMixer.AddComponent(player);
 
                 var playbackTcs = new TaskCompletionSource<bool>();
 
                 void PlaybackStoppedHandler(object? sender, EventArgs args)
                 {
-                    Mixer.Master.RemoveComponent(player);
+                    //Mixer.Master.RemoveComponent(player);
                     playInfo.IsPlayingCompleted = true;
                     playbackTcs.SetResult(true);
                 }
