@@ -78,7 +78,7 @@ body:
       description: |
         您当前使用的 Windows 操作系统版本或 Linux 操作系统和内核版本，可以运行 `winver.exe` 或 `lsb_release -a` 与 `uname -a` 查看。
         如果您不能肯定此 Bug 与操作系统无关，请填写此项。
-      placeholder: 如：10.0.22000.0 或 Linux Arch 6.17.5-arch1-1 \#1 SMP PREEMPT_DYNAMIC Thu, 23 Oct 2025 18:49:03 +0000 x86_64 GNU/Linux
+      placeholder: 如：10.0.22000.0 或 Linux Arch 6.17.5-arch1-1
   - type: checkboxes
     id: revision
     attributes:

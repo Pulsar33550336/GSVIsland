@@ -17,7 +17,7 @@ body:
       label: 检查清单
       description: 在开始反馈这个问题之前，请先检查：
       options:
-        - label: 我已将本插件更新到最新测试版 ![最新的版本号](https://badgen.net/github/release/garyxxxx2021/GSVIsland/?color=orange)，并看过 [最新提交](https://github.com/Gamma13-Software/GSVIsland/commits/dev/)，确认我想要的功能还没有实现。我也已在 [Issues](https://github.com/Gamma13-Software/GSVIsland/issues?q=-label%3ABug) 中检索，确认我想要的功能未被提交过。
+        - label: 我已将本插件更新到最新测试版 ![最新的版本号](https://badgen.net/github/release/Gamma13-Software/GSVIsland/?color=orange)，并看过 [最新提交](https://github.com/Gamma13-Software/GSVIsland/commits/dev/)，确认我想要的功能还没有实现。我也已在 [Issues](https://github.com/Gamma13-Software/GSVIsland/issues?q=-label%3ABug) 中检索，确认我想要的功能未被提交过。
           required: true
         - label: 我已经仔细阅读过选项里的内容，并且知道这个选项不用勾选。
   - type: markdown
